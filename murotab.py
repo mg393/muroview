@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QComboBox, QCheckBox
+from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QComboBox, QCheckBox, QRadioButton, QButtonGroup
 
 class MuroTab(QWidget):
 	def __init__(self, muro, central_widget, canvas):
@@ -8,6 +8,7 @@ class MuroTab(QWidget):
 		self.canvas = canvas
 		self.molecularWeightLabel = QLabel()
 		self.monoisotopicMwLabel = QLabel()
+		self.spacelabel = QLabel("\n\n")
 		self.space1Label = QLabel("")
 		self.pve_charge_Label = QLabel("<u><b>Positive Charge States</b></u>")
 		self.m1_pve_Label = QLabel()
@@ -33,21 +34,39 @@ class MuroTab(QWidget):
 		self.GlcNAc_layout.addWidget(self.GlcNAc_label)
 		self.GlcNAc_layout.addWidget(self.GlcNAc_dropdown)
 
-		self.MurNAc_layout = QHBoxLayout()
+		self.MurNAc_layout = QVBoxLayout()
+		self.MurNAc_layout_top = QHBoxLayout()
+		self.MurNAc_layout_radios = QHBoxLayout()
 		self.MurNAc_label = QLabel("MurNAc: ")
 		self.MurNAc_dropdown = QComboBox()
 		self.MurNAc_dropdown.addItems(["Unmodified", "N-deacetylated", "O-acetylated"])
-		self.reduced_checkbox = QCheckBox("Reduced")
-		self.MurNAc_layout.addWidget(self.MurNAc_label)
-		self.MurNAc_layout.addWidget(self.MurNAc_dropdown)
-		self.MurNAc_layout.addWidget(self.reduced_checkbox)
+		self.MurNAc_layout_top.addWidget(self.MurNAc_label)
+		self.MurNAc_layout_top.addWidget(self.MurNAc_dropdown)
+
+		self.MurNAc_reduced_radio = QRadioButton("Reduced")
+		self.MurNAc_anhydro_radio = QRadioButton("Anhydro")
+		self.MurNAc_normal_radio = QRadioButton("Closed ring")
+		self.radio_group = QButtonGroup()
+		self.radio_group.addButton(self.MurNAc_reduced_radio)
+		self.radio_group.addButton(self.MurNAc_anhydro_radio)
+		self.radio_group.addButton(self.MurNAc_normal_radio)
+		self.MurNAc_layout_radios.addWidget(self.MurNAc_reduced_radio)
+		self.MurNAc_layout_radios.addWidget(self.MurNAc_anhydro_radio)
+		self.MurNAc_layout_radios.addWidget(self.MurNAc_normal_radio)
+		self.MurNAc_normal_radio.setChecked(True)
+
+		self.MurNAc_layout.addLayout(self.MurNAc_layout_top)
+		self.MurNAc_layout.addLayout(self.MurNAc_layout_radios)
 
 		self.GlcNAc_dropdown.currentIndexChanged.connect(self.on_GlcNAc_dropdown_changed)
 		self.MurNAc_dropdown.currentIndexChanged.connect(self.on_MurNAc_dropdown_changed)
-		self.reduced_checkbox.stateChanged.connect(self.on_reduced_checkbox_toggled)
+		self.MurNAc_reduced_radio.toggled.connect(self.on_MurNAc_radio_toggled)
+		self.MurNAc_anhydro_radio.toggled.connect(self.on_MurNAc_radio_toggled)
+		self.MurNAc_normal_radio.toggled.connect(self.on_MurNAc_radio_toggled)
 
 		self.main_layout.addLayout(self.GlcNAc_layout)
 		self.main_layout.addLayout(self.MurNAc_layout)
+		self.main_layout.addWidget(self.spacelabel)
 		self.main_layout.addWidget(self.molecularWeightLabel)
 		self.main_layout.addWidget(self.monoisotopicMwLabel)
 		self.main_layout.addWidget(self.space1Label)
@@ -85,25 +104,27 @@ class MuroTab(QWidget):
 		selected_item = self.GlcNAc_dropdown.itemText(index)
 		if selected_item == "N-deacetylated":
 			self.muropeptide.glcnac.setNAc(True)
-		else: 
+		else:
 			self.muropeptide.glcnac.setNAc(False)
 		print(self.muropeptide.glcnac.NDeAc)
 		self.update()
-		print(f"GlcNAc dropdown changed: Selected {selected_item}")
 
 	def on_MurNAc_dropdown_changed(self, index):
 		selected_item = self.MurNAc_dropdown.itemText(index)
 		if selected_item == "N-deacetylated":
 			self.muropeptide.murnac.setNAc(True)
-		else: 
+		else:
 			self.muropeptide.murnac.setNAc(False)
 		self.update()
-		print(f"MurNAc dropdown changed: Selected {selected_item}")
 
-	def on_reduced_checkbox_toggled(self, state):
-		if state:
-			self.muropeptide.murnac.reduce(True)
-		else:
-			self.muropeptide.murnac.reduce(False)
+	def on_MurNAc_radio_toggled(self):
+		if self.MurNAc_reduced_radio.isChecked():
+			self.muropeptide.murnac.setReduction(True)
+			self.muropeptide.murnac.setAnhydro(False)
+		elif self.MurNAc_anhydro_radio.isChecked():
+			self.muropeptide.murnac.setReduction(False)
+			self.muropeptide.murnac.setAnhydro(True)
+		elif self.MurNAc_normal_radio.isChecked():
+			self.muropeptide.murnac.setReduction(False)
+			self.muropeptide.murnac.setAnhydro(False)
 		self.update()
-		print(f"MurNAc checkbox toggled: {'Reduced' if state else 'Non-reduced'}")

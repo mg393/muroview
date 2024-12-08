@@ -30,7 +30,7 @@ class GlcNAc():
     def smiles(self):
         if self.NDeAc == True:
             return "N[C@@H]1[C@H]([C@@H]([C@H](OC1O9)CO)O)O"
-        else: 
+        else:
             return "CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](OC1O9)CO)O)O"
 
 class MurNAc():
@@ -46,10 +46,10 @@ class MurNAc():
     def setOAc(self, oacetylated):
         self.OAc = oacetylated
 
-    def anhydro(self, anhydrom):
+    def setAnhydro(self, anhydrom):
         self.anhydro = anhydrom
 
-    def reduce(self, reducedm):
+    def setReduction(self, reducedm):
         self.reduced = reducedm
 
     def smiles(self):
@@ -59,10 +59,10 @@ class MurNAc():
             print("yeah boi")
         elif self.NDeAc and self.OAc:
             print("yeah boi")
-        else: 
+        else:
             return "O=C8[C@H](O[C@H]1[C@H]9[C@H](OC(O)[C@@H]1NC(=O)C)CO)C"
 
-class AminoAcid():
+class AminoAcid(): #TODO: change to peptide class. use pyteomics
     def __init__(self, identity, positionm):
         self.id = identity
         self.position = positionm
@@ -97,7 +97,6 @@ class Muropeptide(rdchem.Mol):
     def calc(self):
         print(self.glcnac.smiles())
         combinedSmiles = self.glcnac.smiles() + "." + self.murnac.smiles() + "." + self.aa1.smiles() + "." + self.aa2.smiles()
-        print(combinedSmiles)
         muro = rdmolfiles.MolFromSmiles(combinedSmiles)
         rdchem.Mol.__init__(self, muro)
 
@@ -130,7 +129,3 @@ class Muropeptide(rdchem.Mol):
         svg_renderer.render(painter)
         painter.end()
         return QPixmap.fromImage(img)
-
-        
-
-        
