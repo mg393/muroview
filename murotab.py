@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
+from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QComboBox, QCheckBox
 
 class MuroTab(QWidget):
 	def __init__(self, muro, central_widget, canvas):
@@ -37,11 +37,14 @@ class MuroTab(QWidget):
 		self.MurNAc_label = QLabel("MurNAc: ")
 		self.MurNAc_dropdown = QComboBox()
 		self.MurNAc_dropdown.addItems(["Unmodified", "N-deacetylated", "O-acetylated"])
+		self.reduced_checkbox = QCheckBox("Reduced")
 		self.MurNAc_layout.addWidget(self.MurNAc_label)
 		self.MurNAc_layout.addWidget(self.MurNAc_dropdown)
+		self.MurNAc_layout.addWidget(self.reduced_checkbox)
 
 		self.GlcNAc_dropdown.currentIndexChanged.connect(self.on_GlcNAc_dropdown_changed)
 		self.MurNAc_dropdown.currentIndexChanged.connect(self.on_MurNAc_dropdown_changed)
+		self.reduced_checkbox.stateChanged.connect(self.on_reduced_checkbox_toggled)
 
 		self.main_layout.addLayout(self.GlcNAc_layout)
 		self.main_layout.addLayout(self.MurNAc_layout)
@@ -90,4 +93,17 @@ class MuroTab(QWidget):
 
 	def on_MurNAc_dropdown_changed(self, index):
 		selected_item = self.MurNAc_dropdown.itemText(index)
+		if selected_item == "N-deacetylated":
+			self.muropeptide.murnac.setNAc(True)
+		else: 
+			self.muropeptide.murnac.setNAc(False)
+		self.update()
 		print(f"MurNAc dropdown changed: Selected {selected_item}")
+
+	def on_reduced_checkbox_toggled(self, state):
+		if state:
+			self.muropeptide.murnac.reduce(True)
+		else:
+			self.muropeptide.murnac.reduce(False)
+		self.update()
+		print(f"MurNAc checkbox toggled: {'Reduced' if state else 'Non-reduced'}")

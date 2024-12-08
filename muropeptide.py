@@ -8,6 +8,14 @@ from PyQt5.QtSvg import QSvgWidget, QSvgRenderer
 from PyQt5.QtGui import QPixmap, QPalette, QColor, QImage, QPainter
 from PyQt5.QtCore import Qt, QByteArray
 
+#SMILES joining code
+#9 = GlcNAc-MurNAc glycosidic bond
+#8 = MurNAc-AA1 peptide bond
+#7 = AA1-AA2 peptide bond
+#6 = AA2-AA3 peptide bond
+#5 = AA3-AA4 peptide bond
+#4 = AA4-AA5 peptide bond
+
 class GlcNAc():
     def __init__(self):
         self.NDeAc = False
@@ -21,9 +29,9 @@ class GlcNAc():
 
     def smiles(self):
         if self.NDeAc == True:
-            return "N[C@@H]1[C@H]([C@@H]([C@H](OC1O(*))CO)O)O"
+            return "N[C@@H]1[C@H]([C@@H]([C@H](OC1O9)CO)O)O"
         else: 
-            return "CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](OC1O(*))CO)O)O"
+            return "CC(=O)N[C@@H]1[C@H]([C@@H]([C@H](OC1O9)CO)O)O"
 
 class MurNAc():
     def __init__(self):
@@ -41,37 +49,56 @@ class MurNAc():
     def anhydro(self, anhydrom):
         self.anhydro = anhydrom
 
-    def reducec(self, reducedm):
+    def reduce(self, reducedm):
         self.reduced = reducedm
 
     def smiles(self):
         if self.NDeAc:
-            print("yeah boi")
+            return "O=C8[C@H](O[C@H]1[C@H]9[C@H](OC(O)[C@@H]1N)CO)C"
         elif self.OAc:
             print("yeah boi")
         elif self.NDeAc and self.OAc:
             print("yeah boi")
         else: 
-            return "O=C(O)[C@H](O[C@H]1[C@H](*)[C@H](OC(O)[C@@H]1NC(=O)C)CO)C"
+            return "O=C8[C@H](O[C@H]1[C@H]9[C@H](OC(O)[C@@H]1NC(=O)C)CO)C"
 
 class AminoAcid():
-    def __init__(self):
-        print("TODO")
+    def __init__(self, identity, positionm):
+        self.id = identity
+        self.position = positionm
+        if self.position == 1:
+            self.pos1 = 8
+            self.pos2 = 7
+        elif self.position == 2:
+            self.pos1 = 7
+            self.pos2 = 6
+        elif self.position == 3:
+            self.pos1 = 6
+            self.pos2 = 5
 
+    def smiles(self):
+        if self.id == "lAla":
+            return f"C[C@@H](C(=O){self.pos2})N{self.pos1}"
+        elif self.id == "dGlu":
+            return f"C(CC(=O)O)[C@H](C(=O)O)N{self.pos1}"
+        elif self.id == "mDAP":
+            return f"O=C(O)[C@@H](N)CCC[C@@H](N)C(=O)O"
 
 class Muropeptide(rdchem.Mol):
     def __init__(self):
         self.glcnac = GlcNAc()
         self.murnac = MurNAc()
-        self.aa1 = AminoAcid()
+        self.aa1 = AminoAcid("lAla", 1)
+        self.aa2 = AminoAcid("dGlu", 2)
+        self.aa3 = AminoAcid("mDAP", 3)
         self.calc()
 
 
     def calc(self):
         print(self.glcnac.smiles())
-        combinedSmiles = self.glcnac.smiles() + "." + self.murnac.smiles()
-        muro = rdmolfiles.MolFromSmiles(combinedSmiles.replace('(*)', '9'))
-        print(rdmolfiles.MolToSmiles(muro))
+        combinedSmiles = self.glcnac.smiles() + "." + self.murnac.smiles() + "." + self.aa1.smiles() + "." + self.aa2.smiles()
+        print(combinedSmiles)
+        muro = rdmolfiles.MolFromSmiles(combinedSmiles)
         rdchem.Mol.__init__(self, muro)
 
         self.monoisotopicMass = Descriptors.ExactMolWt(muro)
